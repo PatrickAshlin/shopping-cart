@@ -174,9 +174,42 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        cartProvider.addToCart(product);
+                        if (cartProvider.cart.any(
+                          (item) => item.id == product.id,
+                        )) {
+                          cartProvider.increaseQuantity(product);
+                        } else {
+                          cartProvider.addToCart(product);
+                        }
                       },
-                      child: const Text("Add to Cart"),
+                      child:
+                          cartProvider.cart.any((item) => item.id == product.id)
+                              ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    onPressed: () {
+                                      cartProvider.decreaseQuantity(product);
+                                    },
+                                  ),
+                                  Text(
+                                    cartProvider.cart
+                                        .firstWhere(
+                                          (item) => item.id == product.id,
+                                        )
+                                        .quantity
+                                        .toString(),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () {
+                                      cartProvider.increaseQuantity(product);
+                                    },
+                                  ),
+                                ],
+                              )
+                              : const Text("Add to Cart"),
                     ),
                   ],
                 ),
