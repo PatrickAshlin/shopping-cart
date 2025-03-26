@@ -15,11 +15,10 @@ class ShoppingCartScreen extends StatefulWidget {
 class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
   List<Product> futureProducts = [];
   int _page = 1;
-  final int _limit = 15;
+  final int _limit = 25;
   bool _isLoading = false;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
-
 
   @override
   void initState() {
@@ -43,7 +42,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
 
       setState(() {
         futureProducts.addAll(newProducts);
-        _page++; // Increase the page number
+        _page++;
         _isLoading = false;
         if (newProducts.length < _limit) _hasMore = false;
       });
@@ -81,7 +80,6 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
               IconButton(
                 icon: const Icon(Icons.shopping_cart),
                 onPressed: () {
-                  // Navigate to the cart screen
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const CartScreen()),
@@ -107,43 +105,86 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
           ),
         ],
       ),
-      body:
-          futureProducts.isEmpty && _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                controller: _scrollController,
-                itemCount: futureProducts.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == futureProducts.length) {
-                    return _hasMore
-                        ? const Center(child: CircularProgressIndicator())
-                        : const Center(child: Text("No more products"));
-                  }
-                  var product = futureProducts[index];
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: GridView.builder(
+          controller: _scrollController,
+          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200, // Maximum width for each item
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 0.75, // Adjust based on design
+          ),
+          itemCount: futureProducts.length + (_hasMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == futureProducts.length) {
+              return _hasMore
+                  ? const Center(child: CircularProgressIndicator())
+                  : const SizedBox.shrink();
+            }
 
-                  return Card(
-                    child: ListTile(
-                      leading: Image.network(
-                        product.thumbnail,
-                        width: 50,
-                        height: 50,
-                      ),
-                      title: Text(product.title),
-                      subtitle: Text(
-                        "Original: \$${product.price.toStringAsFixed(2)}\n"
-                        "Discounted: \$${product.discountedPrice.toStringAsFixed(2)}",
-                        style: const TextStyle(color: Colors.green),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.add_shopping_cart),
-                        onPressed: () {
-                          cartProvider.addToCart(product);
-                        },
+            var product = futureProducts[index];
+
+            return Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 3,
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          product.thumbnail,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 8),
+                    Text(
+                      product.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      "Original: \$${product.price.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    Text(
+                      "Discounted: \$${product.discountedPrice.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        cartProvider.addToCart(product);
+                      },
+                      child: const Text("Add to Cart"),
+                    ),
+                  ],
+                ),
               ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
